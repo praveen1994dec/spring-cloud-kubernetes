@@ -24,7 +24,8 @@ Pre-requisites[ TAKE AMAZON LINUX2 SYSTEM t2.micro]:
     
       sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
       sudo rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org
-      sudo yum install jenkins -y sudo service jenkins start
+      sudo yum install jenkins -y 
+      sudo systemctl start jenkins
     
     
     - Install Docker
