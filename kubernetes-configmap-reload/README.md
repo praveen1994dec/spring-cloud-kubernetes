@@ -1,15 +1,52 @@
 # kubernetes-configmap-reload
 
-Pre-requisites:
+Pre-requisites[ TAKE AMAZON LINUX2 SYSTEM t2.micro]:
 --------
     - Install Git
+    
+    yum install git -y
+    
+    - Install Java
+    
+    yum install java -y
+   
     - Install Maven
+    
+    wget http://mirrors.estointernet.in/apache/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
+    tar xvzf  apache-maven-3.6.3-bin.tar.gz
+    vi /etc/profile.d/maven.sh
+    export MAVEN_HOME=/opt/apache-maven-3.6.3
+    export PATH=$PATH:$MAVEN_HOME/bin
+    
+    
+    - Install Jenkins
+    
+      sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+      sudo rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org
+      sudo yum install jenkins -y sudo service jenkins start
+    
+    
     - Install Docker
-    - EKS Cluster
+    
+    yum install docker -y
+    usermod -aG docker jenkins [ Add jenkins user to docker group ]
+    
+    - Install Python
+    
+    yum install python3 -y
+    
+    - Install Ansible 
+    
+    amazon-linux-extras install ansible2 -y
+    
+    
+
+    
+
     
 Clone code from github:
 -------
-    git clone https://github.com/VamsiTechTuts/spring-cloud-kubernetes.git
+    git clone https://github.com/praveen1994dec/spring-cloud-kubernetes.git
     cd spring-cloud-kubernetes/kubernetes-configmap-reload
     
 Build Maven Artifact:
@@ -18,7 +55,7 @@ Build Maven Artifact:
  
 Build Docker image for Springboot Application
 --------------
-    docker build -t vamsitechtuts/kubernetes-configmap-reload .
+    docker build -t praveen1994dec/kubernetes-configmap-reload .
   
 Docker login
 -------------
@@ -26,7 +63,7 @@ Docker login
     
 Push docker image to dockerhub
 -----------
-    docker push vamsitechtuts/kubernetes-configmap-reload
+    docker push praveen1994dec/kubernetes-configmap-reload
     
 Deploy Spring Application:
 --------
@@ -39,13 +76,4 @@ Check Deployments, Pods and Services:
     kubectl get pods
     kubectl get svc
     
-Now Goto Loadbalancer and check whether service comes Inservice or not, If it comes Inservice copy DNS Name of Loadbalancer and Give in WebUI
 
-    http://a70a89c22e06f49f3ba2b3270e974e29-1311314938.us-west-2.elb.amazonaws.com:8080/home/data
-    
-![2](https://user-images.githubusercontent.com/63221837/82123471-44f5f300-97b7-11ea-9d10-438cf9cc98a0.png)
-
-Now we can cleanup by using below commands:
---------
-    kubectl delete deploy kubernetes-configmap-reload
-    kubectl delete svc kubernetes-configmap-reload
