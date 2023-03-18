@@ -1,4 +1,4 @@
-@Library('jenkins-shared-library@master') _
+@Library('jenkins-shared-library@main') _
 pipeline {
 
   agent any
@@ -16,14 +16,20 @@ pipeline {
     }
     stages {
         stage('Git Checkout') {
+            when {
+				expression { params.action == 'create' }
+			}
             steps {
                 gitCheckout(
-                    branch: "master",
+                    branch: "main",
                     url: "https://github.com/praveen1994dec/spring-cloud-kubernetes.git"
                 )
             }
         }
         stage('Build Maven'){
+            when {
+				expression { params.action == 'create' }
+			}
     		steps {
         		dir("${params.AppName}") {
         			sh 'mvn clean package'
@@ -31,6 +37,9 @@ pipeline {
     		}
 	    }
 	    stage("Docker Build and Push") {
+	        when {
+				expression { params.action == 'create' }
+			}
 	        steps {
 	            dir("${params.AppName}") {
 	                dockerBuild ( "${params.ImageName}", "${params.docker_repo}" )
@@ -38,26 +47,51 @@ pipeline {
 	        }
 	    }
 	    stage("Docker CleanUP") {
+	        when {
+				expression { params.action == 'create' }
+			}
 	        steps {
 	            dockerCleanup ( "${params.ImageName}", "${params.docker_repo}" )
 			}
 		}
-	    stage ('Deploy') {
-            steps {
-                script{
-                    dir("${params.AppName}") {
-                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
-	                    accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
-	                    credentialsId: 'AWS_Credentials', 
-	                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-	                        withCredentials([kubeconfigFile(credentialsId: 'kubernetes_config', 
+	    stage("Create deployment") {
+			when {
+				expression { params.action == 'create' }
+			}
+	        steps {
+	            dir("${params.AppName}") {
+	                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
+	                        accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
+	                        credentialsId: 'AWS_Credentials', 
+	                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+	                    withCredentials([kubeconfigContent(credentialsId: 'kubernetes_config', 
 	                        variable: 'KUBECONFIG')]) {
-                            sh "ansible-playbook  playbook.yml --extra-vars image_id=${params.docker_repo}/${params.ImageName}:${params.ImageTag}"
-                          }
+	                        sh 'curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"'  
+                            sh 'chmod u+x ./kubectl'  
+	                        sh 'kubectl create -f kubernetes-configmap.yml'
+	                    }
 	                }
-                    }
-               }
-           }
-       }
+	            }
+	        }
+	    }
+		stage("rollback deployment") {
+			when {
+				expression { params.action == 'rollback' }
+			}
+	        steps {
+	           withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
+	                        accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
+	                        credentialsId: 'AWS_Credentials', 
+	                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+	               withCredentials([kubeconfigContent(credentialsId: 'kubernetes_config', 
+	                        variable: 'KUBECONFIG')]) {
+	               sh """
+	                    kubectl delete deploy ${params.AppName}
+					    kubectl delete svc ${params.AppName}
+				   """
+	               }
+	            }
+	        }
+	    }
     }
 }
