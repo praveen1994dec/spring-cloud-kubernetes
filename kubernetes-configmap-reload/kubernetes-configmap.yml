@@ -28,4 +28,4 @@ spec:
     spec:
       containers:
         - name: kubernetes-configmap-reload
-          image: vamsitechtuts/kubernetes-configmap-reload:latest
+          image: praveensingam1994/kubernetes-configmap-reload:latest
