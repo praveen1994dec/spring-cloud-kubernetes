@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: discovery-client
+logging:
+  level:
+    org.springframework.cloud.kubernetes: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info,refresh,keepalive,health
+
+server:
+  port: 8081

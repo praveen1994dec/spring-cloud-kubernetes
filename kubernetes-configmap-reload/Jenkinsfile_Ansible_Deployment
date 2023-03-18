@@ -1,0 +1,63 @@
+@Library('jenkins-shared-library@master') _
+pipeline {
+
+  agent any
+  
+  parameters {
+	choice(name: 'action', choices: 'create\nrollback', description: 'Create/rollback of the deployment')
+    string(name: 'ImageName', description: "Name of the docker build")
+	string(name: 'ImageTag', description: "Name of the docker build")
+	string(name: 'AppName', description: "Name of the Application")
+    string(name: 'docker_repo', description: "Name of docker repository")
+  }
+      
+  tools{ 
+        maven 'maven3'
+    }
+    stages {
+        stage('Git Checkout') {
+            steps {
+                gitCheckout(
+                    branch: "master",
+                    url: "https://github.com/VamsiTechTuts/spring-cloud-kubernetes.git"
+                )
+            }
+        }
+        stage('Build Maven'){
+    		steps {
+        		dir("${params.AppName}") {
+        			sh 'mvn clean package'
+        		}
+    		}
+	    }
+	    stage("Docker Build and Push") {
+	        steps {
+	            dir("${params.AppName}") {
+	                dockerBuild ( "${params.ImageName}", "${params.docker_repo}" )
+	            }
+	        }
+	    }
+	    stage("Docker CleanUP") {
+	        steps {
+	            dockerCleanup ( "${params.ImageName}", "${params.docker_repo}" )
+			}
+		}
+	    stage ('Deploy') {
+            steps {
+                script{
+                    dir("${params.AppName}") {
+                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
+	                    accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
+	                    credentialsId: 'AWS_Credentials', 
+	                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+	                        withCredentials([kubeconfigFile(credentialsId: 'kubernetes_config', 
+	                        variable: 'KUBECONFIG')]) {
+                            sh "ansible-playbook  playbook.yml --extra-vars image_id=${params.docker_repo}/${params.ImageName}:${params.ImageTag}"
+                          }
+	                }
+                    }
+               }
+           }
+       }
+    }
+}

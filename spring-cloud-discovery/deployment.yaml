@@ -1,0 +1,31 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: spring-cloud-discovery
+spec:
+  type: LoadBalancer
+  selector:
+    app: spring-cloud-discovery
+  ports:
+    - name: http
+      protocol: TCP
+      # ELB's port
+      port: 8081
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-cloud-discovery
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: spring-cloud-discovery
+  template:
+    metadata:
+      labels:
+        app: spring-cloud-discovery
+    spec:
+      containers:
+        - name: spring-cloud-discovery
+          image: vamsitechtuts/spring-cloud-discovery:latest
