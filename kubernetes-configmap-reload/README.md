@@ -31,6 +31,8 @@ Pre-requisites[ TAKE AMAZON LINUX2 SYSTEM t2.micro]:
     - Install Docker
     
     yum install docker -y
+    systemctl start docker
+    systemctl enable docker
     usermod -aG docker jenkins [ Add jenkins user to docker group ]
     
     - Install Python
