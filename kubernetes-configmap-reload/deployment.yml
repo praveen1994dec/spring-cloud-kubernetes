@@ -1,18 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kubernetes-configmap-reload
+  name: kubernetes-configmap-reload1
 spec:
   replicas: 3
+  selector:
+    matchLabels:
+      app: kubernetes-configmap-reload1
   template:
     metadata:
       labels:
-        app: kubernetes-configmap-reload
+        app: kubernetes-configmap-reload1
     spec:
       containers:
-      - image: "{{ image_id }}"
-        name: kubernetes-configmap-reload
-        ports:
-        - containerPort: 8080
-          name: http
-
+        - name: kubernetes-configmap-reload1
+          image: praveensingam1994/kubernetes-configmap-reload:latest
