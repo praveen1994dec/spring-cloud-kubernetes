@@ -1,0 +1,35 @@
+- hosts: localhost
+  become: yes
+  tasks:
+
+    - name: update
+      apt: update_cache=yes   
+   
+    - name: install apache2
+      apt: name=apache2 state=latest
+
+    - name: enabled mod_rewrite
+      apache2_module: name=rewrite state=present
+
+    - name: enabled proxy
+      apache2_module: name=proxy state=present
+
+    - name: enabled proxy_http
+      apache2_module: name=proxy_http state=present
+    
+    - name: enabled ssl
+      apache2_module: name=ssl state=present
+    
+    - name: enabled socache_shmcb
+      apache2_module: name=socache_shmcb state=present
+
+    - name: enabled mpm_event
+      apache2_module: name=mpm_event state=present
+
+
+      notify:
+        - restart apache2
+
+  handlers:
+    - name: restart apache2
+      service: name=apache2 state=restarted
