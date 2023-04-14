@@ -63,7 +63,7 @@ pipeline {
 			}
 		}
 	    stage("Create deployment") {
-			when {
+			when{
 				expression { params.action == 'create' }
 			}
 	        steps {
