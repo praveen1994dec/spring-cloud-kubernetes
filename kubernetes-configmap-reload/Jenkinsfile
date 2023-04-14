@@ -54,43 +54,29 @@ pipeline {
 	            dockerCleanup ( "${params.ImageName}", "${params.docker_repo}" )
 			}
 		}
+			    stage("Ansible Setup") {
+	        when {
+				expression { params.action == 'create' }
+			}
+	        steps {
+	            sh 'ansible-playbook ${WORKSPACE}/kubernetes-configmap-reload/server_setup.yml'
+			}
+		}
 	    stage("Create deployment") {
 			when {
 				expression { params.action == 'create' }
 			}
 	        steps {
-	            dir("${params.AppName}") {
-	                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
-	                        accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
-	                        credentialsId: 'AWS_Credentials', 
-	                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-	                    withCredentials([kubeconfigContent(credentialsId: 'kubernetes_config', 
-	                        variable: 'KUBECONFIG')]) {
-	                        sh 'curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"'  
-                            sh 'chmod u+x ./kubectl'  
-	                        sh 'kubectl create -f kubernetes-configmap.yml'
-	                    }
-	                }
-	            }
+	            sh 'echo ${WORKSPACE}'
+	            sh 'kubectl create -f ${WORKSPACE}/kubernetes-configmap-reload/kubernetes-configmap.yml'
 	        }
 	    }
 		stage("rollback deployment") {
-			when {
-				expression { params.action == 'rollback' }
-			}
-	        steps {
-	           withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
-	                        accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
-	                        credentialsId: 'AWS_Credentials', 
-	                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-	               withCredentials([kubeconfigContent(credentialsId: 'kubernetes_config', 
-	                        variable: 'KUBECONFIG')]) {
-	               sh """
-	                    kubectl delete deploy ${params.AppName}
+	        steps {	            	         	           
+	              sh """
+	                   kubectl delete deploy ${params.AppName}
 					    kubectl delete svc ${params.AppName}
-				   """
-	               }
-	            }
+				  """	       
 	        }
 	    }
     }
