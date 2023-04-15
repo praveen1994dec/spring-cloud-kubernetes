@@ -5,10 +5,10 @@ pipeline {
   
   parameters {
 	choice(name: 'action', choices: 'create\nrollback', description: 'Create/rollback of the deployment')
-    string(name: 'ImageName', description: "Name of the docker build")
-	string(name: 'ImageTag', description: "Name of the docker build")
-	string(name: 'AppName', description: "Name of the Application")
-    string(name: 'docker_repo', description: "Name of docker repository")
+    string(name: 'ImageName', description: "Name of the docker build", defaultValue: "kubernetes-configmap-reload")
+	string(name: 'ImageTag', description: "Name of the docker build",defaultValue: "v1")
+	string(name: 'AppName', description: "Name of the Application",defaultValue: "kubernetes-configmap-reload")
+    string(name: 'docker_repo', description: "Name of docker repository",defaultValue: "praveensingam1994")
   }
       
   tools{ 
@@ -63,13 +63,20 @@ pipeline {
 			}
 		}
 	    stage("Create deployment") {
-			when{
+			when {
 				expression { params.action == 'create' }
 			}
 	        steps {
 	            sh 'echo ${WORKSPACE}'
 	            sh 'kubectl create -f ${WORKSPACE}/kubernetes-configmap-reload/kubernetes-configmap.yml'
 	        }
+	    }
+	    stage ("wait_for_pods"){
+	    steps{
+              
+                sh 'sleep 300'
+             
+	    }
 	    }
 		stage("rollback deployment") {
 	        steps {	            	         	           
