@@ -3,6 +3,8 @@
 Pre-requisites.  [ TAKE AMAZON LINUX2 SYSTEM t2.micro]:
 ---------------
     - Install Git
+  
+  
     
     yum install git -y
     
